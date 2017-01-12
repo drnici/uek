@@ -395,7 +395,20 @@ else
 
 		if ( $sys["user"]["role_id"] == 5 ){
 			echo ( "<img src=\"" . $sys["icon_path"] . "global_add.gif\" alt=\"&Uuml;K-Eintrag erstellen\" border=\"0\" /> <a href=\"./form/\">&Uuml;K-Eintrag erstellen</a><br />\n" );
-			echo("<img src=\"" . $sys["icon_path"] . "global_xls.gif\" alt=\"Alle Notentabellen\" border=\"0\" /> <button value=\"./export.php?type=nal&amp;jahr=\" onclick=\"fctOpenLink(this.value,document.getElementById('jahrNT').value)\">Notentabelle von</button></a><input id=\"jahrNT\" type=\"text\" placeholder=\"Jahr\">");
+			echo("<img src=\"" . $sys["icon_path"] . "global_xls.gif\" alt=\"Alle Notentabellen\" border=\"0\" /> Notentabelle von </a><input id=\"jahrNT\" type=\"text\" placeholder=\"Jahr\"><button value=\"./export.php?type=nal&amp;jahr=\" onclick=\"fctOpenLink(this.value,document.getElementById('jahrNT').value)\">exportieren</button><br/>\n");
+
+			echo("<img src=\"" . $sys["icon_path"] . "global_xls.gif\" alt=\"ÜK-Perioden\" border=\"0\" /> Feedbackb&oumlgen von ");
+			//Mögliche Jahrgänge aus Datenbank auslesen
+			$jg_result = $db->fctSendQuery("SELECT uek.uek_jg FROM `bew_uek` AS uek GROUP BY uek.uek_jg ORDER BY uek.uek_jg DESC");
+			echo("<select style=\"overflow: hidden\" name=\"jg_uek_periode\" size=\"0\">\n");
+
+
+			while ($jg = mysql_fetch_array($jg_result)) {
+				echo("<option value=\"" . $jg["uek_jg"] . "\">" . $jg["uek_jg"] . "</option>\n");
+			}
+			echo("</select>\n");
+
+
 			echo('<script type="text/javascript">function fctOpenLink(href,jahr){
 			window.location.href = href + jahr+"&amp";
 }</script>');
@@ -452,7 +465,7 @@ else
 		</table>
 		
 		<?PHP
-		if ( $sys["user"]["role_id"] == 5 ) echo ( "<p><b>Achtung:</b> &Uuml;K-Eintr&auml;ge, welche mindestens ein Feedback oder Resultat haben, k�nnen nicht gel�scht werden.</p>\n" );
+		if ( $sys["user"]["role_id"] == 5 ) echo ( "<p><b>Achtung:</b> &Uuml;K-Eintr&auml;ge, welche mindestens ein Feedback oder Resultat haben, k&oumlnnen nicht gel&oumlscht werden.</p>\n" );
 	}
 }
 ############################################################################################
