@@ -75,12 +75,73 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 			<td><?PHP echo ( $modul_data["modul_kurz"] . " " . $modul_data["modul_bezeichnung"] ); ?></td>
 			</tr>
 			<tr>
-			<th>Anonymität</th>
-			<td><input type="checkbox" name="feedback_anonym" value="1"<?PHP echo ( $feedback_anonym ); ?> class="width_auto" /> Ich möchte den ÜK anonym bewerten.</td>
+			<th>Anonymit&aumlt</th>
+			<td><input type="checkbox" name="feedback_anonym" value="1"<?PHP echo ( $feedback_anonym ); ?> class="width_auto" /> Ich m&oumlchte den &UumlK anonym bewerten.</td>
 			</tr>
 			</table>
-			
+			<style>
+				.fragen_group{
+					width: 760px;
+					height: auto;
+					margin:0 auto;
+					overflow: auto;
+				}
+				.radio_button_group{
+					border: 0;
+					width: 45%;
+					float:left;
+				}
+				.radio_button_group input{
+					width:auto;
+					margin-left: 1.5em;
+				}
+				.bemerkung_textfield{
+					width: 45%;
+					float: right;
+					-webkit-margin-before: 1em;
+					-webkit-margin-after: 1em;
+					-webkit-margin-start: 0px;
+					-webkit-margin-end: 0px;
+				}
+				.bemerkung_textfield textarea{
+					height: auto;
+					width:auto;
+				}
+			</style>
 			<?PHP
+
+
+
+
+
+			$fb_fragen_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_frage` ORDER BY `frage_id`");
+			while ( $fragen_data = mysql_fetch_array ( $fb_fragen_result ) ) {
+				echo("<div class='fragen_group'><fieldset class=\"radio_button_group\"><p><b>" . $fragen_data["fragename"] . "</b></p>");
+
+				if($fragen_data["art"] == 0){
+					$fb_antwort_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_antwort` WHERE `frage_fk_id` = ".$fragen_data["frage_id"]." ORDER BY `antwort_id`");
+					while ( $antwort_data = mysql_fetch_array ( $fb_antwort_result ) ) {
+						echo('<input type="radio" value"1" name="frage_'.$fragen_data["frage_id"].'">'.$antwort_data["antwortname"].'<br/>');
+
+
+						//echo('<input type="radio" name="frage_'.$fragen_data["frage_id"].'" value="'.$antwort_data["wert"].'">'.$antwort_data["antwortname"]'<br/>');
+
+					}
+					echo('</fieldset>');
+					$var = $fragen_data["anzahl_fragen"]*2;
+					echo('<div class="bemerkung_textfield"><b>Bemerkung</b></br></br><textarea cols="40" rows="'.$var.'"></textarea></div></div>');
+
+				}else if($fragen_data["art"] == 1){
+
+
+				}else if($fragen_data["art"] == 2){
+					echo('<div class="bemerkung_textfield"><b>Bemerkung</b></br></br><textarea cols="40" rows="'.$var.'"></textarea></div></div>');
+
+				}
+			}
+
+
+/*
 			$kat_result = $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_kat` ORDER BY `kat_id`" );
 			while ( $kat_data = mysql_fetch_array ( $kat_result ) )
 			{
@@ -104,12 +165,8 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 					echo ( "</p>\n" );
 				}
 				
-			}
+			}*/
 			?>
-			
-			<h3>Bemerkungen</h3>
-			
-			<p><textarea name="feedback_comment" rows="2" cols="2" style="width: 100%; height:80px;"><?PHP echo ( $feedback_comment ); ?></textarea></p>
 			
 			<p> 
 				<input type="submit" class="btn" value="Feedback abspeichern" />
@@ -122,8 +179,8 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 		}
 		else
 		{
-			// Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden können.
-			fctHandleLog ( $db , $sys , "Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden können." );
+			// Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden kï¿½nnen.
+			fctHandleLog ( $db , $sys , "Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden kï¿½nnen." );
 				
 			$sys["script"] 		= 0;
 			$sys["page_title"] 	= "Fehler beim Zugriff";
@@ -137,8 +194,8 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 	}
 	else
 	{
-		// Keine gültige ÜK-ID übergeben.
-		fctHandleLog ( $db , $sys , "Keine gültige ÜK-ID übergeben." );
+		// Keine gï¿½ltige ï¿½K-ID ï¿½bergeben.
+		fctHandleLog ( $db , $sys , "Keine gï¿½ltige ï¿½K-ID ï¿½bergeben." );
 			
 		$sys["script"] 		= 0;
 		$sys["page_title"] 	= "Fehler beim Zugriff";
