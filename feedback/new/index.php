@@ -79,65 +79,74 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 			<td><input type="checkbox" name="feedback_anonym" value="1"<?PHP echo ( $feedback_anonym ); ?> class="width_auto" /> Ich m&oumlchte den &UumlK anonym bewerten.</td>
 			</tr>
 			</table>
-			<style>
-				.fragen_group{
-					width: 760px;
-					height: auto;
-					margin:0 auto;
-					overflow: auto;
-				}
-				.radio_button_group{
-					border: 0;
-					width: 45%;
-					float:left;
-				}
-				.radio_button_group input{
-					width:auto;
-					margin-left: 1.5em;
-				}
-				.bemerkung_textfield{
-					width: 45%;
-					float: right;
-					-webkit-margin-before: 1em;
-					-webkit-margin-after: 1em;
-					-webkit-margin-start: 0px;
-					-webkit-margin-end: 0px;
-				}
-				.bemerkung_textfield textarea{
-					height: auto;
-					width:auto;
-				}
-			</style>
+
+			<link rel="stylesheet" href="style.css" type="text/css">
 			<?PHP
 
 
 
 
-
+			//Alle Fragen werden aus der Datenbank herausgelsen
 			$fb_fragen_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_frage` ORDER BY `frage_id`");
 			while ( $fragen_data = mysql_fetch_array ( $fb_fragen_result ) ) {
-				echo("<div class='fragen_group'><fieldset class=\"radio_button_group\"><p><b>" . $fragen_data["fragename"] . "</b></p>");
 
-				if($fragen_data["art"] == 0){
-					$fb_antwort_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_antwort` WHERE `frage_fk_id` = ".$fragen_data["frage_id"]." ORDER BY `antwort_id`");
-					while ( $antwort_data = mysql_fetch_array ( $fb_antwort_result ) ) {
-						echo('<input type="radio" value"1" name="frage_'.$fragen_data["frage_id"].'">'.$antwort_data["antwortname"].'<br/>');
+				echo('<div class="fragen_group">');
 
+//Radiobutton
+					if($fragen_data["art"] == 0){
+						//Fieldliste für Radiobuttons
+						echo('<fieldset class="radio_button_group">');
 
-						//echo('<input type="radio" name="frage_'.$fragen_data["frage_id"].'" value="'.$antwort_data["wert"].'">'.$antwort_data["antwortname"]'<br/>');
+						//Frage wird auf Feedbackbogen präsentiert
+						echo('<p><b>' . $fragen_data["fragename"] . '</b></p>');
+
+						//Die jweiligen Antworten aus der Datenbank auslesen
+						$fb_antwort_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_antwort` WHERE `frage_fk_id` = ".$fragen_data["frage_id"]." ORDER BY `antwort_id`");
+
+						//Tabelle um eine schöne struktur zu behalten
+						echo("<table style='width: 100%'>");
+
+						//Radiobuttons werden bezüglich der Frage & Antwort erstellt
+						while ( $antwort_data = mysql_fetch_array ( $fb_antwort_result ) ) {
+
+							echo("<tr>");
+							echo('<td style="vertical-align: middle"><input type="radio" value"1" id="antwort_'.$antwort_data["antwort_id"].'" name="frage_'.$fragen_data["frage_id"].'"></td>');
+							echo('<td><label for="antwort_'.$antwort_data["antwort_id"].'">'.$antwort_data["antwortname"].'</label></td>');
+							echo('</tr>');
+
+						}
+
+						//Fieldliste für Radiobuttons schliessen
+						echo('</table></fieldset>');
+
+						//Höhe der TExtarea durch Anzahl Fragen errechnen
+						$var = $fragen_data["anzahl_fragen"]*2;
+
+						//Kommentarfeld für die Bemerkung pro Frage
+						echo('<div class="bemerkung_textfield"><b>Bemerkung</b></br><textarea cols="40" rows="'.$var.'"></textarea></div>');
+
 
 					}
-					echo('</fieldset>');
-					$var = $fragen_data["anzahl_fragen"]*2;
-					echo('<div class="bemerkung_textfield"><b>Bemerkung</b></br></br><textarea cols="40" rows="'.$var.'"></textarea></div></div>');
+//Sternebarometer
+					else if($fragen_data["art"] == 1){
+						echo('<p><b>' . $fragen_data["fragename"] . '</b></p><fieldset class="rating">');
+						for ($i = 10; 1 <= $i;$i--){
+							echo('<input type="radio" id="'.$fragen_data["frage_id"].'star'.$i.'" name="rating'.$fragen_data["frage_id"].'" value="'.$i.'"><label class="full" for="'.$fragen_data["frage_id"].'star'.$i.'"></label>');
+						}
+						echo('</fieldset>');
+					}
+//Textarea
+					else if($fragen_data["art"] == 2){
 
-				}else if($fragen_data["art"] == 1){
+						//Fieldliste für die Textarea
+						echo('<br/><fieldset class="textarea_fieldlist">');
 
+						echo('<b>'.$fragen_data["fragename"].'</b></br></br><textarea cols="40" rows="4"></textarea>');
 
-				}else if($fragen_data["art"] == 2){
-					echo('<div class="bemerkung_textfield"><b>Bemerkung</b></br></br><textarea cols="40" rows="'.$var.'"></textarea></div></div>');
+					}
 
-				}
+				echo('</div>');
+
 			}
 
 
