@@ -26,7 +26,7 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 			$person_id		= $sys["user"]["person_id"];
 		}
 		
-		// prüfen, ob wirklich alle Fragen ausgefüllt wurden
+		// prï¿½fen, ob wirklich alle Fragen ausgefï¿½llt wurden
 		$alle_fragen	= true;
 		$header			= "";
 		$frage_result 	= $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_frage`" );
@@ -53,9 +53,9 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 			// alles okay, eintragen!
 		
 			// Bogen mit allgemeinen Infos erstellen
-			$db->fctSendQuery ( "INSERT INTO `bew_uek_fb_bogen` (`uek_id`,`person_id`,`bogen_time`,`bogen_comment`) VALUES (" . $uek_id . "," . $person_id . "," . time() . ",'" . $feedback_comment . "' )" );
+			$db->fctSendQuery ( "INSERT INTO `bew_uek_fb_bogen` (`uek_fk_id`,`person_fk_id`) VALUES (" . $uek_id . "," . $person_id . ")" );
 			
-			$bogen_id = mysql_insert_id ( );
+			$bogen_id = $db->fctSendQuery("SELECT `bogen_id` As result FROM `bew_uek_fb_bogen` ORDER BY result DESC LIMIT 1");
 			
 			// Antworten eintragen
 			$frage_result = $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_frage`" );
@@ -63,9 +63,12 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 			{
 				if ( isset ( $_POST [ $frage_data [ "frage_id" ] ] ) )
 				{
-					$antwort = htmlspecialchars ( mysql_escape_string ( $_POST [ $frage_data [ "frage_id" ] ] ) );
-				
-					$db->fctSendQuery ( "INSERT INTO `bew_uek_feedback` (`bogen_id`,`frage_id`,`antwort_id`) VALUES (" . $bogen_id . "," . $frage_data [ "frage_id" ] . ",'" . $antwort . "' )" );
+                    $antwort = htmlspecialchars ( mysql_escape_string ( $_POST [ $frage_data [ "frage_id" ] ] ) );
+				    if($frage_data [ "frage_id" ] == 17 ){
+                        $db->fctSendQuery ( "INSERT INTO `bew_uek_fb` (`bogen_fk_id`,`frage_fk_id`,`antwort_fk_id`,`bemerkung`) VALUES (" . $bogen_id . "," . $frage_data [ "frage_id" ] . ",0,'" . $antwort . " ')" );
+                    }else {
+                        $db->fctSendQuery("INSERT INTO `bew_uek_fb` (`bogen_fk_id`,`frage_fk_id`,`antwort_fk_id`,`bemerkung`) VALUES (" . $bogen_id . "," . $frage_data ["frage_id"] . "," . $antwort . ",'Hans')");
+                    }
 				}
 			}
 			
@@ -74,8 +77,8 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 	}
 	else
 	{
-		// Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden können.
-		fctHandleLog ( $db , $sys , "Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden können." );
+		// Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden kï¿½nnen.
+		fctHandleLog ( $db , $sys , "Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden kï¿½nnen." );
 			
 		$sys["script"] 		= 0;
 		$sys["page_title"] 	= "Fehler beim Zugriff";
