@@ -45,8 +45,7 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 			else
 			{
 				$feedback_anonym = " checked=\"checked\"";
-				
-				$feedback_comment = "";
+
 					
 				$frage_value = array ( );
 				$frage_result = $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_frage`" );
@@ -86,11 +85,14 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 
 
 
-			//Alle Fragen werden aus der Datenbank herausgelsen
+			//Alle Fragen werden aus der Datenbank herauslesen
 			$fb_fragen_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_frage` ORDER BY `frage_id`");
 			while ( $fragen_data = mysql_fetch_array ( $fb_fragen_result ) ) {
 
 				echo('<div class="fragen_group">');
+
+				//Die jweiligen Antworten aus der Datenbank auslesen
+				$fb_antwort_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_antwort` WHERE `frage_fk_id` = ".$fragen_data["frage_id"]." ORDER BY `antwort_id`");
 
 //Radiobutton
 					if($fragen_data["art"] == 0){
@@ -100,17 +102,17 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 						//Frage wird auf Feedbackbogen präsentiert
 						echo('<p><b>' . $fragen_data["fragename"] . '</b></p>');
 
-						//Die jweiligen Antworten aus der Datenbank auslesen
-						$fb_antwort_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_antwort` WHERE `frage_fk_id` = ".$fragen_data["frage_id"]." ORDER BY `antwort_id`");
+
 
 						//Tabelle um eine schöne struktur zu behalten
 						echo("<table style='width: 100%'>");
 
 						//Radiobuttons werden bezüglich der Frage & Antwort erstellt
 						while ( $antwort_data = mysql_fetch_array ( $fb_antwort_result ) ) {
-
-							echo("<tr>");
-							echo('<td style="vertical-align: middle"><input type="radio" value"1" id="antwort_'.$antwort_data["antwort_id"].'" name="frage_'.$fragen_data["frage_id"].'"></td>');
+							$c = "";
+							if ( $frage_value [ $fragen_data [ "frage_id" ] ] == $antwort_data["antwort_id"] ) $c = " checked=\"checked\"";
+							echo('<tr><td style="vertical-align: middle">');
+							echo('<input type="radio" name="'.$fragen_data["frage_id"].'" value="'.$antwort_data["antwort_id"].'" id="antwort_'.$antwort_data["antwort_id"].'"'.$c.'></td>');
 							echo('<td><label for="antwort_'.$antwort_data["antwort_id"].'">'.$antwort_data["antwortname"].'</label></td>');
 							echo('</tr>');
 
@@ -129,10 +131,15 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 					}
 //Sternebarometer
 					else if($fragen_data["art"] == 1){
+
+						//Frage wird auf Feedbackbogenbogen präsentiert
 						echo('<p><b>' . $fragen_data["fragename"] . '</b></p><fieldset class="rating">');
-						for ($i = 10; 1 <= $i;$i--){
-							echo('<input type="radio" id="'.$fragen_data["frage_id"].'star'.$i.'" name="rating'.$fragen_data["frage_id"].'" value="'.$i.'"><label class="full" for="'.$fragen_data["frage_id"].'star'.$i.'"></label>');
+
+						while ( $antwort_data = mysql_fetch_array ( $fb_antwort_result ) ) {
+							echo('<input type="radio" id="'.$fragen_data["frage_id"].'star'.$antwort_data["antwort_id"].'" name="'.$fragen_data["frage_id"].'" value="'.$antwort_data["antwort_id"].'">');
+							echo('<label class="full" for="'.$fragen_data["frage_id"].'star'.$antwort_data["antwort_id"].'"></label>');
 						}
+
 						echo('</fieldset>');
 					}
 //Textarea
@@ -141,7 +148,7 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 						//Fieldliste für die Textarea
 						echo('<br/><fieldset class="textarea_fieldlist">');
 
-						echo('<b>'.$fragen_data["fragename"].'</b></br></br><textarea cols="40" rows="4"></textarea>');
+						echo('<b>'.$fragen_data["fragename"].'</b></br></br><textarea cols="40" rows="4" required name="'.$fragen_data["frage_id"].'" value="'.$antwort_data["antwort_id"].'"></textarea>');
 
 					}
 
@@ -189,7 +196,7 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 		else
 		{
 			// Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden k�nnen.
-			fctHandleLog ( $db , $sys , "Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden k�nnen." );
+			fctHandleLog ( $db , $sys , "Formularaufruf, obwohl momentan keine Feedbacks abgegeben werden k&oumlnnen." );
 				
 			$sys["script"] 		= 0;
 			$sys["page_title"] 	= "Fehler beim Zugriff";
