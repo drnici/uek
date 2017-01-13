@@ -23,7 +23,7 @@ else
 }
 ############################################################################################
 
-// ANZEIGE F�R LERNENDE (ROLE_ID 1)
+// ANZEIGE FüR LERNENDE (ROLE_ID 1)
 if ( $sys["user"]["role_id"] == 1 )
 {
 	if ( $sys["user"]["person_s_semester"] == 1 OR $sys["user"]["person_s_semester"] == 2 )
@@ -32,38 +32,56 @@ if ( $sys["user"]["role_id"] == 1 )
 		{
 			if ( $_GET["feedback"] == "ok" )
 			{
-				echo ( "<p class=\"notification\"><b>Vielen Dank</b>: Ihr Feedback wurde erfolgreich gespeichert und wird wenn m�glich bei der �berarbeitung des �Ks beachtet.</p>\n" );
+				echo ( "<p class=\"notification\"><b>Vielen Dank</b>: Ihr Feedback wurde erfolgreich gespeichert und wird wenn m&oumlglich bei der &Uumlberarbeitung des &UumlKs beachtet.</p>\n" );
+			}else if($_GET["feedback"] == "bag"){
+				echo ( "<p class=\"notification\"><b>Vielen Dank</b>: Der Bearbeitungsantrag wurde an den Administrator gesendet. Sobald er diesen akzeptiert, kann der Feedbackbogen korrigiert werden.</p>\n" );
 			}
 		}
-		
-		// Aktuell aufgeschaltete Feedbacks anzeigen
-		$time_fb_end = time ( ) - 60 * 60 * 24;
-		$fb_count = $db->fctCountData ( "bew_uek" , "`uek_mp_time` < " . time ( ) . " AND `uek_mp_time` > " . $time_fb_end );
 
-		if ( $fb_count > 0 )
+		echo ( "<h3>aktuelle Feedbacks</h3>\n" );
+
+		//Tabelle für die Übersicht
+		echo ( "<table>\n" );
+		echo ( "<tr>\n" );
+		echo ( "<th>&nbsp;</th>\n" );
+		echo ( "<th>&Uuml;K-Bezeichnung</th>\n" );
+		echo ( "<th>Zeitpunkt Modulpr&uumlfung</th>\n" );
+		echo ( "<th>Bearbeiten</th>\n" );
+		echo ( "<th>Wertung</th>\n" );
+		echo ( "</tr>\n" );
+
+		$fb_result = $db->fctSendQuery ( "SELECT SUM( bufa.wert )/16 AS  'wert', bm.modul_kurz, bm.modul_bezeichnung, bu.uek_id, bu.uek_mp_time
+											FROM  `bew_modul` AS bm
+											INNER JOIN  `bew_uek` AS bu ON bm.modul_id = bu.modul_id
+											INNER JOIN  `bew_uek_fb_bogen` AS bufb ON bu.uek_id = bufb.uek_fk_id
+											INNER JOIN  `bew_uek_fb` AS buf ON bufb.bogen_id = buf.bogen_fk_id
+											INNER JOIN  `bew_uek_fb_antwort` AS bufa ON buf.antwort_fk_id = bufa.antwort_id
+											WHERE (`person_fk_id` =  '" . $sys["user"]["person_id"] . "' OR `person_fk_id` =  '" . md5($sys["user"]["person_id"]) . "') GROUP BY bm.modul_kurz");
+
+		while ( $fb_data = mysql_fetch_array ( $fb_result ) )
 		{
-			echo ( "<h3>aktuelle Feedbacks</h3>\n" );
-			
-			echo ( "<table>\n" );
 			echo ( "<tr>\n" );
-			echo ( "<th>&nbsp;</th>\n" );
-			echo ( "<th>&Uuml;K-Bezeichnung</th>\n" );
-			echo ( "<th>Zeitpunkt Modulpr�fung</th>\n" );
-			echo ( "</tr>\n" );
-			$fb_result = $db->fctSendQuery ( "SELECT bm.modul_kurz, bm.modul_bezeichnung, bu.uek_id, bu.uek_mp_time FROM `bew_modul` AS bm, `bew_uek` AS bu WHERE bu.modul_id = bm.modul_id AND bu.uek_mp_time < " . time ( ) . " AND bu.uek_mp_time > " . $time_fb_end );
-			
-			while ( $fb_data = mysql_fetch_array ( $fb_result ) )
-			{
-				echo ( "<tr>\n" );
-				echo ( "<td><img src=\"" . $sys["icon_path"] . "bew_uek_feedback.gif\" alt=\"&Uuml;K-Feedback\" border=\"0\" /></td>\n" );
-				echo ( "<td><a href=\"./feedback/new/?uek_id=" . $fb_data["uek_id"] . "\">" . $fb_data["modul_kurz"] . " " . $fb_data["modul_bezeichnung"] . "</a></td>\n" );
-				echo ( "<td>" . date ( $conf->strDateFormatFull , $fb_data["uek_mp_time"] ) . "</td>\n" );
-				echo ( "</tr>\n" );
+			echo ( "<td><img src=\"" . $sys["icon_path"] . "bew_uek_feedback.gif\" alt=\"&Uuml;K-Feedback\" border=\"0\" /></td>\n" );
+			echo ( "<td>" . $fb_data["modul_kurz"] . " " . $fb_data["modul_bezeichnung"] . "</td>\n" );
+			echo ( "<td>" . date ( $conf->strDateFormatFull , $fb_data["uek_mp_time"] ) . "</td>\n" );
+
+			// Es können nur die Feedbacks bearbeitet werden, welche noch nicht abgeschlossen wurden.
+			$time_fb_end = time ( ) - 60 * 60 * 24;
+			$fb_count = $db->fctCountData ( "bew_uek" , "`uek_mp_time` < " . time ( ) . " AND `uek_id` = ".$fb_data["uek_id"] ." AND `uek_mp_time` > " . $time_fb_end );
+			if($fb_count > 0){
+				echo ( "<td><a href=\"/modules/bew/uek/?feedback=bag&\"\" onclick=\"\"><img src=\"" . $sys["icon_path"] . "bew_schule_tabelle_note_edit.gif\" alt=\"&Uuml;K-Feedback\" border=\"0\" /></a></td>\n" );
+			}else{
+				echo ( "<td></td>\n" );
 			}
-			echo ( "</table>\n" );
-			
-			echo ( "<h3>Abgeschlossene �K</h3>\n" );
+
+			//Der Wert wird auf zwei Dezimalstellen gerundet
+			echo ( "<td>".round($fb_data["wert"],2)."</td>\n" );
+			echo ( "</tr>\n" );
 		}
+		echo ( "</table>\n" );
+			
+		echo ( "<h3>Abgeschlossene &UumlK</h3>\n" );
+
 	}
 	
 	$lde_count = $db->fctCountData ( "bew_uek_res" , "`person_id` = " . $sys["user"]["person_id"] );
