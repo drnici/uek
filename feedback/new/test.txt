@@ -1,0 +1,1 @@
+INSERT INTO `bew_uek_fb_bogen` (`uek_fk_id`,`person_fk_id`,`bogen_time`) VALUES (4,138,0,CURRENT_TIMESTAMP )

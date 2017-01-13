@@ -15,11 +15,10 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 	if ( $fb_count > 0 )
 	{
 		$uek_id 			= htmlspecialchars ( mysql_escape_string ( $_POST["uek_id"] ) );
-		$feedback_comment 	= htmlspecialchars ( mysql_escape_string ( $_POST["feedback_comment"] ) );
 		
 		if ( isset ( $_POST["feedback_anonym"] ) )
 		{
-			$person_id		= "NULL";
+			$person_id		= md5($sys["user"]["person_id"]);
 		}
 		else
 		{
@@ -46,33 +45,61 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 		if ( !$alle_fragen )
 		{
 			// nicht alles okay
-			header ( "Location: ./?s=mand&uek_id=" . $uek_id . "&feedback_anonym=" . $_POST["feedback_anonym"] . "&" . $header . "feedback_comment=" . urlencode ( $_POST["feedback_comment"] ) . "&" );
+			header ( "Location: ./?s=mand&uek_id=" . $uek_id . "&feedback_anonym=" . $_POST["feedback_anonym"] . "&" . $header . "&" );
 		}
 		else
 		{
-			// alles okay, eintragen!
-		
-			// Bogen mit allgemeinen Infos erstellen
-			$db->fctSendQuery ( "INSERT INTO `bew_uek_fb_bogen` (`uek_fk_id`,`person_fk_id`) VALUES (" . $uek_id . "," . $person_id . ")" );
-			
-			$bogen_id = $db->fctSendQuery("SELECT `bogen_id` As result FROM `bew_uek_fb_bogen` ORDER BY result DESC LIMIT 1");
-			
-			// Antworten eintragen
-			$frage_result = $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_frage`" );
-			while ( $frage_data = mysql_fetch_array ( $frage_result ) )
-			{
-				if ( isset ( $_POST [ $frage_data [ "frage_id" ] ] ) )
-				{
-                    $antwort = htmlspecialchars ( mysql_escape_string ( $_POST [ $frage_data [ "frage_id" ] ] ) );
-				    if($frage_data [ "frage_id" ] == 17 ){
-                        $db->fctSendQuery ( "INSERT INTO `bew_uek_fb` (`bogen_fk_id`,`frage_fk_id`,`antwort_fk_id`,`bemerkung`) VALUES (" . $bogen_id . "," . $frage_data [ "frage_id" ] . ",0,'" . $antwort . " ')" );
-                    }else {
-                        $db->fctSendQuery("INSERT INTO `bew_uek_fb` (`bogen_fk_id`,`frage_fk_id`,`antwort_fk_id`,`bemerkung`) VALUES (" . $bogen_id . "," . $frage_data ["frage_id"] . "," . $antwort . ",'Hans')");
+		// alles okay, eintragen!
+		    if($_POST["mand"] == "Feedback korrigieren" && is_numeric($_POST["bgid"])){
+
+        // Bogen mit allgemeinen Infos updaten
+                $db->fctSendQuery("UPDATE `bew_uek_fb_bogen` SET `bogen_korrektur` = 0 WHERE `bogen_id` = ".$_POST["bgid"]);
+
+
+                //Letzte eingefügt bogen_id ermitteln
+                $bogen_id_full = $db->fctSendQuery("SELECT `bogen_id` As result FROM `bew_uek_fb_bogen` ORDER BY result DESC LIMIT 1");
+                while ($bogen_data = mysql_fetch_array($bogen_id_full)) {
+                    $bogen_id = $bogen_data["result"];
+                }
+
+                // Antworten eintragen
+                $frage_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_frage`");
+                while ($frage_data = mysql_fetch_array($frage_result)) {
+                    if (isset ($_POST [$frage_data ["frage_id"]])) {
+                        $antwort = htmlspecialchars(mysql_escape_string($_POST [$frage_data ["frage_id"]]));
+                        if ($frage_data ["frage_id"] == 17) {
+                            $db->fctSendQuery("INSERT INTO `bew_uek_fb` (`bogen_fk_id`,`frage_fk_id`,`antwort_fk_id`,`bemerkung`) VALUES (" . $bogen_id . "," . $frage_data ["frage_id"] . ",0,'" . $antwort . " ')");
+                        } else {
+                            $db->fctSendQuery("INSERT INTO `bew_uek_fb` (`bogen_fk_id`,`frage_fk_id`,`antwort_fk_id`,`bemerkung`) VALUES (" . $bogen_id . "," . $frage_data ["frage_id"] . "," . $antwort . ",'" . $_POST[$frage_data["frage_id"] * 88] . "')");
+                        }
                     }
-				}
-			}
-			
-			header ( "Location: ../../?feedback=ok&" );
+                }
+            }else if($_POST["mand"] == "Feedback abspeichern") {
+
+                // Bogen mit allgemeinen Infos erstellen
+                $db->fctSendQuery("INSERT INTO `bew_uek_fb_bogen` (`uek_fk_id`,`person_fk_id`,`bogen_time`,`bogen_korrektur`) VALUES (" . $uek_id . ",'" . $person_id . "',CURRENT_TIMESTAMP,0 )");
+
+                //Letzte eingefügt bogen_id ermitteln
+                $bogen_id_full = $db->fctSendQuery("SELECT `bogen_id` As result FROM `bew_uek_fb_bogen` ORDER BY result DESC LIMIT 1");
+                while ($bogen_data = mysql_fetch_array($bogen_id_full)) {
+                    $bogen_id = $bogen_data["result"];
+                }
+
+                // Antworten eintragen
+                $frage_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_frage`");
+                while ($frage_data = mysql_fetch_array($frage_result)) {
+                    if (isset ($_POST [$frage_data ["frage_id"]])) {
+                        $antwort = htmlspecialchars(mysql_escape_string($_POST [$frage_data ["frage_id"]]));
+                        if ($frage_data ["frage_id"] == 17) {
+                            $db->fctSendQuery("INSERT INTO `bew_uek_fb` (`bogen_fk_id`,`frage_fk_id`,`antwort_fk_id`,`bemerkung`) VALUES (" . $bogen_id . "," . $frage_data ["frage_id"] . ",0,'" . $antwort . " ')");
+                        } else {
+                            $db->fctSendQuery("INSERT INTO `bew_uek_fb` (`bogen_fk_id`,`frage_fk_id`,`antwort_fk_id`,`bemerkung`) VALUES (" . $bogen_id . "," . $frage_data ["frage_id"] . "," . $antwort . ",'" . $_POST[$frage_data["frage_id"] * 88] . "')");
+                        }
+                    }
+                }
+
+                header("Location: ../../?feedback=ok&");
+            }
 		}
 	}
 	else
