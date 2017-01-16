@@ -423,20 +423,25 @@ ORDER BY bufb.bogen_time DESC" );
 			echo("<img src=\"" . $sys["icon_path"] . "global_xls.gif\" alt=\"Alle Notentabellen\" border=\"0\" /> Notentabelle von </a><input id=\"jahrNT\" type=\"text\" placeholder=\"Jahr\"><button value=\"./export.php?type=nal&amp;jahr=\" onclick=\"fctOpenLink(this.value,document.getElementById('jahrNT').value)\">exportieren</button><br/>\n");
 
 			echo("<img src=\"" . $sys["icon_path"] . "global_xls.gif\" alt=\"ÜK-Perioden\" border=\"0\" /> Feedbackb&oumlgen von ");
+
 			//Mögliche Jahrgänge aus Datenbank auslesen
 			$jg_result = $db->fctSendQuery("SELECT uek.uek_jg FROM `bew_uek` AS uek GROUP BY uek.uek_jg ORDER BY uek.uek_jg DESC");
-			echo("<select style=\"overflow: hidden\" name=\"jg_uek_periode\" size=\"0\">\n");
+			echo("<select style=\"overflow: hidden\" id=\"jg_uek_periode\" size=\"0\">\n");
 
 
 			while ($jg = mysql_fetch_array($jg_result)) {
 				echo("<option value=\"" . $jg["uek_jg"] . "\">" . $jg["uek_jg"] . "</option>\n");
 			}
 			echo("</select>\n");
+			echo('<button value="./feedback/export.php?jahr=" onclick="fctExportFeedback(document.getElementById(\'jg_uek_periode\').value)">exportieren</button>');
 
-
-			echo('<script type="text/javascript">function fctOpenLink(href,jahr){
-			window.location.href = href + jahr+"&amp";
-}</script>');
+			echo('<script type="text/javascript">
+			function fctOpenLink(href,jahr){
+				window.location.href = href + jahr+"&amp";
+			}function fctExportFeedback(p_intJahr){
+				document.location.href = "./feedback/export.php?jahr=" + p_intJahr + "&";
+			}
+			</script>');
 		}
 		echo ( "</p>\n" );
 	?>
