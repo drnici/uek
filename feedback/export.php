@@ -15,11 +15,20 @@ if ( !empty ( $uek_data["uek_id"] ) )
 	$modul_data  = $db->fctSelectData ( "bew_modul" , "`modul_id` = " . $uek_data["modul_id"] );
 	$person_data = $db->fctSelectData ( "core_person" , "`person_id` = " . $uek_data["person_id"] );
 	$ort_data	 = $db->fctSelectData ( "bew_uek_ort" , "`ort_id` = " . $uek_data["ort_id"] );
+
+    //Alle Fragen
+    $fragen_result  = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_frage`");
+
+    //Alle User des √úKs
+    $user_result = $db->fctSendQuery("SELECT cp.person_vorname, cp.person_name, cp.person_id
+                                        FROM  `core_person` AS cp
+                                        INNER JOIN  `bew_uek_fb_bogen` AS bufb ON md5(cp.person_id) = bufb.person_fk_id OR cp.person_id = bufb.person_fk_id
+                                        WHERE bufb.uek_fk_id =".$uek_id);
 }
 else
 {
-	// Ung¸ltige ‹K-Nummer f¸r den Excel-Export.
-	fctHandleLog ( $db , $sys , "Ung¸ltige ‹K-Nummer f¸r den Excel-Export." );
+	// UngÔøΩltige ÔøΩK-Nummer fÔøΩr den Excel-Export.
+	fctHandleLog ( $db , $sys , "Ung&uumlltige &UumlK-Nummer f&uumlr den Excel-Export." );
 			
 	$sys["script"] 		= 0;
 	$sys["page_title"] 	= "Fehler beim Zugriff";
@@ -33,8 +42,8 @@ else
 
 if ( $sys["user"]["role_id"] != 5 )
 {
-	// Nur Administratoren kˆnnen die ‹K-Feedbacks exportieren.
-	fctHandleLog ( $db , $sys , "Nur Administratoren kˆnnen die ‹K-Feedbacks exportieren." );
+	// Nur Administratoren kÔøΩnnen die ÔøΩK-Feedbacks exportieren.
+	fctHandleLog ( $db , $sys , "Nur Administratoren k&oumlnnen die &UumlK-Feedbacks exportieren." );
 			
 	$sys["script"] 		= 0;
 	$sys["page_title"] 	= "Fehler beim Zugriff";
@@ -46,59 +55,159 @@ if ( $sys["user"]["role_id"] != 5 )
 	die ( );
 }
 
-// Wir brauchen eine CSV-Datei
-header ( "Content-type: application/csv" );
-header ( "Content-Disposition: attachment; filename=\"fb_export_" . $modul_data["modul_kurz"] . "_" . $uek_data["uek_jg"] . ".csv\"" );
+// Wir brauchen eine XLS-Datei
+header ( "Content-type: application/xls" );
 
-// CSV-Inhalte
-echo ( "‹bersicht der Beurteilungen aller Teilnehmer des ¸berbetrieblichen Kurses;\n" );
-echo ( ";\n" );
-echo ( "‹K-Bezeichnung;;;;" . $modul_data["modul_kurz"] . ";;;Kursanbieter;;;;;;;" . $ort_data["ort_firma"] . ";\n" );
-echo ( "Kursleitung;;;;" . $person_data["person_vorname"] . " " . $person_data["person_name"] . ";;;Kursort;;;;;;;" . $ort_data["ort_adresse"] . ", " . $ort_data["ort_plz"] . " " . $ort_data["ort_ort"] . ";\n" );
-echo ( ";\n" );
-echo ( ";\n" );
-echo ( ";\n" );
-echo ( ";i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;i;m;s;n;\n" );
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---- TABELLENSTRUKTUR -> ANFANG
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+$output = "";
+$output .= "<table style='font-family: Calibri; font-size: 10pt;text-align: left'>
+                <tr><th colspan='5' style='font-size:16pt'><b>ICT-Berufsbildung Bern - Umfrage ".chr(220)."K</b></th></tr>
+                <tr></tr>
+                <tr><td colspan='5' style='color: RGB(53,126,189);background-color: RGB(204,204,204);'>Multiple Choice Frage</td></tr>
+                <tr><td colspan='5' style='color: RGB(212,63,58);background-color: RGB(204,204,204);'>Bewertungsmatrix Frage</td></tr>
+                <tr><td colspan='5' style='color: RGB(57,132,57);background-color: RGB(204,204,204);'>Eingabefeld Frage</td></tr>
+                <tr></tr>
+                <tr>
+                    <th style='width: auto; background-color: RGB(238,238,238);'>Vorname</th>
+                    <th style='width: auto; background-color: RGB(238,238,238)'>Nachname</th>
+                    <th style='width: auto; background-color: RGB(238,238,238)'>Kursleiter/-in</th>
+                    <th style='width: auto; background-color: RGB(238,238,238)'>Kursanbieter</th>
+                    <th style='width: auto; background-color: RGB(238,238,238);'>Modul</th>";
 
-$fb_result = $db->fctSendQuery ( "SELECT bufb.bogen_id, bufb.person_id FROM `bew_uek_fb_bogen` AS bufb WHERE bufb.uek_id = " . $uek_data["uek_id"] );
-while ( $fb_data = mysql_fetch_array ( $fb_result ) )
-{
-	if ( $fb_data["person_id"] != NULL )
-	{
-		$person_data = mysql_fetch_array ( $db->fctSendQuery ( "SELECT cp.person_vorname, cp.person_name FROM `core_person` AS cp WHERE cp.person_id = " . $fb_data["person_id"] ) );
-		
-		echo ( $person_data["person_vorname"] . " " . $person_data["person_name"] . ";" );
-	}
-	else
-	{
-		echo ( "Feedback anonym;" );
-	}
-	
-	$frage_result = $db->fctSendQuery ( "SELECT buff.frage_id FROM `bew_uek_fb_frage` AS buff" );
-	while ( $frage_data = mysql_fetch_array ( $frage_result ) )
-	{
-		$antwort_data = $db->fctSelectData ( "bew_uek_feedback" , "`bogen_id` = " . $fb_data["bogen_id"] . " AND `frage_id` = " . $frage_data["frage_id"] );
-		
-		if ( $antwort_data["antwort_id"] == 1 ) 		echo ( "1;;;;" );
-		elseif ( $antwort_data["antwort_id"] == 2 ) 	echo ( ";1;;;" );
-		elseif ( $antwort_data["antwort_id"] == 3 ) 	echo ( ";;1;;" );
-		elseif ( $antwort_data["antwort_id"] == 4 ) 	echo ( ";;;1;" );
+while($fragen_data = mysql_fetch_array ( $fragen_result )){
 
-	}
-	echo ( "\n" );
+    //Je nach Fragenart wird die Frabe geswitcht
+    if($fragen_data["frage_id"] < 14){
+        $output .= "<th style='color: RGB(53,126,189); background-color: RGB(204,204,204);border-left: 1px black;'>".($fragen_data["frage_id"]+1) ." - " . $fragen_data["fragename"] ."</th>";
+    }else if($fragen_data["frage_id"] > 13 && $fragen_data["frage_id"] < 17){
+        $output .= "<th style='color: RGB(212,63,58); background-color: RGB(204,204,204);border-left: 1px black;'>".($fragen_data["frage_id"]+1) ." - " . $fragen_data["fragename"] ."</th>";
+    }else if($fragen_data["frage_id"] == 17){
+        $output .= "<th style='color: RGB(57,132,57); background-color: RGB(204,204,204);border-left: 1px black;'>".($fragen_data["frage_id"]+1) ." - " . $fragen_data["fragename"] ."</th>";
+    }
+
+    //Alle Antworten mit der frage_id auslesen
+    $antwort_result = $db->fctSendQuery("SELECT * FROM `bew_uek_fb_antwort` WHERE `frage_fk_id` = ". $fragen_data["frage_id"]);
+    while($antwort_data = mysql_fetch_array ( $antwort_result )){
+        if($fragen_data["frage_id"] < 14)
+        $output .= "<th style='background-color: RGB(238,238,238)'>".$antwort_data["antwortname"] ."</th>";
+    }
+
+    //Kommentare sind nur f√ºr Multiple Choice Fragen
+    if($fragen_data["frage_id"]<14){
+        $output .= "<th>Kommentar</th>";
+    }
 }
- $verbindung = mysql_connect("localhost",
- "loginportal","f04697a1aa"); mysql_select_db("loginportal");
 
-$abfrage = "SELECT bogen_comment FROM bew_uek_fb_bogen";
-$ergebnis = mysql_query($abfrage);
-while($bogen_comment = mysql_fetch_object($ergebnis))
-   {
-   
-   echo "$bogen_comment->bogen_comment ".";\n";
-   
-   }
-   
+//Frage & Antwortenzeile schliessen
+$output .= "</tr></table>";
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---- TABELLENSTRUKTUR -> FERTIG
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---- TABELLENINHALT -> ANFANG
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+//Immer gleiche Inhalte
+$fix_line = "<td>".$person_data["person_vorname"] . " " . $person_data["person_name"] ."</td><td>".$ort_data["ort_firma"] . " AG</td><td>".$modul_data["modul_kurz"]. "-" .$modul_data["modul_bezeichnung"]."</td>";
+
+while ($user_data = mysql_fetch_array($user_result)) {
+
+    //Fixe linie mit Namen, Kursleiter, Kursanbieter, Modul
+    $output .= "<table border='1'><tr><td>".$user_data["person_vorname"]."</td><td>".$user_data["person_name"]."</td>". $fix_line;
+
+    //Anzahl Antworten pro Frage errechnen
+    $count_fragen = 0;
+
+    //Alle Feedbackresultate pro user auslesen
+    $fb_result   = $db->fctSendQuery("SELECT buf . * , bufb.person_fk_id, buff.anzahl_fragen, buff.art, buff.frage_id, bufa.antwortname
+                                        FROM  `bew_uek_fb` AS buf
+                                        INNER JOIN  `bew_uek_fb_frage` AS buff ON buf.frage_fk_id = buff.frage_id
+                                        INNER JOIN  `bew_uek_fb_bogen` AS bufb ON buf.bogen_fk_id = bufb.bogen_id
+                                        LEFT JOIN `bew_uek_fb_antwort` As bufa ON buf.antwort_fk_id = bufa.antwort_id
+                                        WHERE bufb.uek_fk_id = ".$uek_id." AND bufb.person_fk_id = ".$user_data["person_id"] ." OR bufb.person_fk_id = md5(".$user_data["person_id"].") ORDER BY buf.feedback_id");
+
+    while ($fb_data = mysql_fetch_array($fb_result)) {
+
+
+        //Frage mit Bemerkung
+        if ($fb_data["art"] == 0) {
+            $output .= "<td></td>";
+        }
+
+        //Z√§hlt die Fragen pro Aufruf auf
+        $count_fragen = $count_fragen + $fb_data["anzahl_fragen"];
+        $var = $count_fragen - intval($fb_data["antwort_fk_id"]);
+
+
+        //Fragentypus 1:3:4:5 Anzahl Antworten
+        if ($fb_data["anzahl_fragen"] == 1) {
+            if($fb_data["art"] == 2){
+                $output .= "<td>".$fb_data["bemerkung"]."</td>";
+            }else{
+                $output .= "<td>".$fb_data["antwortname"]."</td>";
+            }
+        } else if ($fb_data["anzahl_fragen"] == 3) {
+            if ($var == 1) {
+                $output .= "<td></td><td>1</td><td></td>";
+            } else if ($var == 2) {
+                $output .= "<td>1</td><td></td><td></td>";
+            } else if ($var == 0) {
+                $output .= "<td></td><td></td><td>1</td>";
+            }
+        } else if ($fb_data["anzahl_fragen"] == 4) {
+            if ($var == 1) {
+                $output .= "<td></td><td></td><td>1</td><td></td>";
+            } else if ($var == 2) {
+                $output .= "<td></td><td>1</td><td></td><td></td>";
+            } else if ($var == 3) {
+                $output .= "<td>1</td><td></td><td></td><td></td>";
+            } else if ($var == 0) {
+                $output .= "<td></td><td></td><td></td><td>1</td>";
+            }
+        } else if ($fb_data["anzahl_fragen"] == 5) {
+            if ($var == 1) {
+                $output .= "<td></td><td></td><td></td><td>1</td><td></td>";
+            } else if ($var == 2) {
+                $output .= "<td></td><td></td><td>1</td><td></td><td></td>";
+            } else if ($var == 3) {
+                $output .= "<td></td><td>1</td><td></td><td></td><td></td>";
+            } else if ($var == 4) {
+                $output .= "<td>1</td><td></td><td></td><td></td><td></td>";
+            } else if ($var == 0) {
+                $output .= "<td></td><td></td><td></td><td></td><td>1</td>";
+            }
+        }
+
+
+        //Frage mit Bemerkung
+        if ($fb_data["art"] == 0) {
+            $output .= "<td>" . $fb_data["bemerkung"] . "</td>";
+        }
+
+    }
+    $output .= "</tr>";
+}
+$output .= "</table>";
+/*--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---- TABELLENINHALT -> FERTIG
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------*/
+
+
+mb_convert_encoding($output,"UTF-8");
+header ( "Content-Disposition: attachment; filename=\"fb_export_" . $modul_data["modul_kurz"] . "_" . $uek_data["uek_jg"] . ".xls\"" );
+echo $output;
 
 ############################################################################################
 include ( $sys["root_path"] . "_global/footer.php" );
