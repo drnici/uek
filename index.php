@@ -219,7 +219,7 @@ else
 		<td><?PHP echo ( date ( $conf->strDateFormat , $uek_data["uek_time_start"] ) . " - " . date ( $conf->strDateFormat , $uek_data["uek_time_end"] ) ); ?></td>
 		</tr>
 		<tr>
-		<th>�K-Tage</th>
+		<th>&UumlK-Tage</th>
 		<td><?PHP echo ( $uek_data["uek_tage"] ); ?></td>
 		</tr>
 		<tr>
@@ -265,7 +265,7 @@ else
 		
 		if ( $bew_count == 0 )
 		{
-			echo ( "<p>Zu diesem �berbetrieblichen Kurs liegen im Moment noch keine Resultate vor.</p>\n" );
+			echo ( "<p>Zu diesem &Uumlberbetrieblichen Kurs liegen im Moment noch keine Resultate vor.</p>\n" );
 		}
 		else
 		{
@@ -330,13 +330,13 @@ else
 
 		}
 		
-		$bogen_count = $db->fctCountData ( "bew_uek_fb_bogen" , "`uek_id` = " . $uek_data["uek_id"] );
+		$bogen_count = $db->fctCountData ( "bew_uek_fb_bogen" , "`uek_fk_id` = " . $uek_data["uek_id"] );
 		if ( $bogen_count > 0 )
 		{
 	
 			echo ( "<h3>Feedback</h3>\n" );
 			
-			if ( $sys["user"]["role_id"] == 5 ) echo ( "<p><img src=\"" . $sys["icon_path"] . "global_xls.gif\" alt=\"Feedbacks als CSV-Datei herunterladen\" border=\"0\" /> <a href=\"./feedback/export.php?uek_id=" . $uek_data["uek_id"] . "\">Feedbacks als CSV-Datei herunterladen</a></p>\n" );
+			if ( $sys["user"]["role_id"] == 5 ) echo ( "<p><img src=\"" . $sys["icon_path"] . "global_xls.gif\" alt=\"Feedbacks als XLS-Datei herunterladen\" border=\"0\" /> <a href=\"./feedback/export.php?uek_id=" . $uek_data["uek_id"] . "\">Feedbacks als XLS-Datei herunterladen</a></p>\n" );
 		?>
 		<table>
 		  <tr>
@@ -350,8 +350,15 @@ else
 			$row_highlight 	= true;
 			$count_avg		= 0;
 			$i				= 0;
-			
-			$feedback_result = $db->fctSendQuery ( "SELECT bufb.bogen_id, bufb.bogen_time, AVG ( buf.antwort_id ) AS `bogen_schnitt`, bufb.person_id FROM `bew_uek_fb_bogen` AS bufb, `bew_uek_feedback` AS buf WHERE bufb.uek_id = " . $uek_data["uek_id"] . " AND bufb.bogen_id = buf.bogen_id GROUP BY bufb.bogen_id ORDER BY bufb.bogen_time DESC" );
+
+			$feedback_result = $db->fctSendQuery ( "
+SELECT bufb.bogen_id, bufb.bogen_time, AVG ( bufa.wert) AS `bogen_schnitt`, bufb.person_fk_id 
+FROM `bew_uek_fb_bogen` AS bufb
+INNER JOIN `bew_uek_fb` AS buf ON bufb.bogen_id = buf.bogen_fk_id 
+INNER JOIN `bew_uek_fb_antwort` As bufa ON buf.antwort_fk_id = bufa.antwort_id
+WHERE bufb.uek_fk_id = " . $uek_data["uek_id"] . " 
+GROUP BY bufb.bogen_id 
+ORDER BY bufb.bogen_time DESC" );
 			while ( $feedback_data = mysql_fetch_array ( $feedback_result ) )
 			{
 				if ( $row_highlight )
@@ -363,7 +370,7 @@ else
 					echo ( "<tr>\n" ); $row_highlight = true;
 				}
 				echo ( "<td><img src=\"" . $sys["icon_path"] . "bew_uek_feedback.gif\" alt=\"&Uuml;K-Feedback\" border=\"0\" /></td>\n" );
-				echo ( "<td><a href=\"./feedback/?bogen_id=" . $feedback_data["bogen_id"] . "&\">" . date ( $conf->strDateFormatFull , $feedback_data["bogen_time"] ) . "</a></td>\n" );
+				echo ( "<td><a href=\"./feedback/?bogen_id=" . $feedback_data["bogen_id"] . "&\">" . date ( $conf->strDateFormatFull , strtotime($feedback_data["bogen_time"]) ) . "</a></td>\n" );
 				
 				echo ( "<td>" . bcdiv ( $feedback_data["bogen_schnitt"] , 1 , 1 ) . "</td>\n" );
 				
@@ -372,9 +379,9 @@ else
 				
 				if ( $sys["user"]["role_id"] == 5 )
 				{
-					if ( is_numeric ( $feedback_data["person_id"] ) )
+					if ( is_numeric ( $feedback_data["person_fk_id"] ) )
 					{
-						$person_data = $db->fctSelectData ( "core_person" , "`person_id` = " . $feedback_data["person_id"] );
+						$person_data = $db->fctSelectData ( "core_person" , "`person_id` = " . $feedback_data["person_fk_id"] );
 						echo ( "<td><a href=\"../../../core/person/profile/?person_id=" . $person_data["person_id"] . "&\">" . $person_data["person_vorname"] . " " . $person_data["person_name"] . "</a></td>\n" );
 					}
 					else echo ( "<td>anonym</td>\n" );
@@ -448,7 +455,7 @@ else
 		$uek_result = $db->fctSendQuery ( "SELECT bu.uek_jg, bu.uek_id, bm.modul_kurz, bm.modul_bezeichnung, bu.uek_time_start, bu.uek_time_end, cp.person_id, cp.person_vorname, cp.person_name FROM `bew_uek` AS bu, `bew_modul` AS bm, `core_person` AS cp WHERE bu.modul_id = bm.modul_id AND bu.person_id = cp.person_id ORDER BY bu.uek_jg DESC, bu.uek_time_start DESC, bm.modul_kurz" );
 		while ( $uek_data = mysql_fetch_array ( $uek_result ) )
 		{
-			$bogen_count 	= $db->fctCountData ( "bew_uek_fb_bogen" , "`uek_id` = " . $uek_data["uek_id"] );
+			$bogen_count 	= $db->fctCountData ( "bew_uek_fb_bogen" , "`uek_fk_id` = " . $uek_data["uek_id"] );
 			$bew_count 		= $db->fctCountData ( "bew_uek_res" , "`uek_id` = " . $uek_data["uek_id"] );
 		
 			// Zeilenfarbe anpassen
