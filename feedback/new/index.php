@@ -32,8 +32,6 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 					$feedback_anonym = "";
 					if ( !empty ( $_GET["feedback_anonym"] ) ) $feedback_anonym = " checked=\"checked\"";
 					
-					$feedback_comment = htmlspecialchars ( urldecode ( $_GET["feedback_comment"] ) );
-					
 					$frage_value = array ( );
 					$frage_result = $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_frage`" );
 					while ( $frage_data = mysql_fetch_array ( $frage_result ) )
@@ -125,7 +123,7 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 						$var = $fragen_data["anzahl_fragen"]*2;
 
 						//Kommentarfeld für die Bemerkung pro Frage
-						echo('<div class="bemerkung_textfield"><b>Bemerkung</b></br><textarea cols="40" rows="'.$var.'"></textarea></div>');
+						echo('<div class="bemerkung_textfield"><b>Bemerkung</b></br><textarea name="'.$fragen_data["frage_id"]*88 .'" cols="40" rows="'.$var.'"></textarea></div>');
 
 
 					}
@@ -156,36 +154,17 @@ if ( $sys["user"]["role_id"] == 1 AND ( $sys["user"]["person_s_semester"] == 1 O
 
 			}
 
-
-/*
-			$kat_result = $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_kat` ORDER BY `kat_id`" );
-			while ( $kat_data = mysql_fetch_array ( $kat_result ) )
-			{
-				echo ( "<h3>" . $kat_data["kat_name"] . "</h3>\n" );
-				
-				$frage_result = $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_frage` WHERE `kat_id` = " . $kat_data["kat_id"] );
-				while ( $frage_data = mysql_fetch_array ( $frage_result ) )
-				{
-					echo ( "<p><b>" . $frage_data["frage_text"] . "</b></p>" );
-					
-					echo ( "<p>\n" );
-					
-					$antwort_result = $db->fctSendQuery ( "SELECT * FROM `bew_uek_fb_antwort` ORDER BY `antwort_id`" );
-					while ( $antwort_data = mysql_fetch_array ( $antwort_result ) )
-					{
-						$c = "";
-						if ( $frage_value [ $frage_data [ "frage_id" ] ] == $antwort_data["antwort_id"] ) $c = " checked=\"checked\"";
-						echo ( "<input type=\"radio\" name=\"" . $frage_data["frage_id"] . "\" value=\"" . $antwort_data["antwort_id"] . "\" class=\"width_auto\"" . $c . " /> " . $antwort_data["antwort_text"] . "\n" );
-					}
-		
-					echo ( "</p>\n" );
-				}
-				
-			}*/
 			?>
 			
-			<p> 
-				<input type="submit" class="btn" value="Feedback abspeichern" />
+			<p>
+				<?php
+				if(isset($_GET["korr"]) == 2 && isset($_GET["bgid"])){
+					echo('<input type="submit" class="btn" name="mand" value="Feedback korrigieren" />');
+					echo('<input type="hidden" name="bgid" value="'.$_GET["bgid"].'" />');
+				}else{
+					echo('<input type="submit" class="btn" name="mand" value="Feedback abspeichern" />');
+				}
+				?>
 				<input type="button" class="btn" value="zur&uuml;ck zur &Uuml;bersicht" onclick="self.history.back(1);" />
 			</p> 
 			
