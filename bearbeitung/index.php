@@ -26,7 +26,7 @@ else
     <tr>
     <th>&nbsp;</th>
     <th>Antragsteller/in</th>
-    <th>Antrag am</th>
+    <th>Antrag gestellt am</th>
     <th>&nbsp;</th>
     </tr>
     <?PHP
@@ -49,7 +49,7 @@ else
 		}
 		echo ( "<td><img src=\"" . $sys["icon_path"] . "bew_schule_tabelle_note_del_request.gif\" alt=\"L&oumlschantrag\" border=\"0\" /></td>\n" );
 		echo ( "<td nowrap=\"nowrap\">" . $request_data["person_vorname"] . " " . $request_data["person_name"] . "</td>\n" );
-		echo ( "<td>" . $request_data["bogen_korrektur_time"] . "</td>\n" );
+		echo ( "<td>" . date("d.m.Y", strtotime($request_data["bogen_korrektur_time"])) . "</td>\n");
 
 		echo ( "<td nowrap=\"nowrap\">\n" );
 

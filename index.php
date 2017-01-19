@@ -34,6 +34,9 @@ if ( $sys["user"]["role_id"] == 1 )
 			{
 				echo ( "<p class=\"notification\"><b>Vielen Dank</b>: Ihr Feedback wurde erfolgreich gespeichert und wird wenn m&oumlglich bei der &Uumlberarbeitung des &UumlKs beachtet.</p>\n" );
 			}else if($_GET["feedback"] == "bag"){
+				if($_GET["bog"] == 1 && isset($_GET["bgid"])){
+					$db->fctSendQuery("UPDATE `bew_uek_fb_bogen` SET `bogen_korrektur` = 1, `bogen_korrektur_time` = CURRENT_TIMESTAMP WHERE `bogen_id` =".$_GET["bgid"]);
+				}
 				echo ( "<p class=\"notification\"><b>Vielen Dank</b>: Der Bearbeitungsantrag wurde an den Administrator gesendet. Sobald er diesen akzeptiert, kann der Feedbackbogen korrigiert werden.</p>\n" );
 			}
 		}
@@ -50,7 +53,7 @@ if ( $sys["user"]["role_id"] == 1 )
 		echo ( "<th>Wertung</th>\n" );
 		echo ( "</tr>\n" );
 
-		$fb_result = $db->fctSendQuery ( "SELECT SUM( bufa.wert )/16 AS  'wert', bm.modul_kurz, bm.modul_bezeichnung, bu.uek_id, bu.uek_mp_time
+		$fb_result = $db->fctSendQuery ( "SELECT SUM( bufa.wert )/16 AS  'wert', bm.modul_kurz, bm.modul_bezeichnung, bu.uek_id, bu.uek_mp_time,bufb.bogen_id
 											FROM  `bew_modul` AS bm
 											INNER JOIN  `bew_uek` AS bu ON bm.modul_id = bu.modul_id
 											INNER JOIN  `bew_uek_fb_bogen` AS bufb ON bu.uek_id = bufb.uek_fk_id
@@ -69,7 +72,7 @@ if ( $sys["user"]["role_id"] == 1 )
 			$time_fb_end = time ( ) - 60 * 60 * 24;
 			$fb_count = $db->fctCountData ( "bew_uek" , "`uek_mp_time` < " . time ( ) . " AND `uek_id` = ".$fb_data["uek_id"] ." AND `uek_mp_time` > " . $time_fb_end );
 			if($fb_count > 0){
-				echo ( "<td><a href=\"/modules/bew/uek/?feedback=bag&\"\" onclick=\"\"><img src=\"" . $sys["icon_path"] . "bew_schule_tabelle_note_edit.gif\" alt=\"&Uuml;K-Feedback\" border=\"0\" /></a></td>\n" );
+				echo ( "<td><a href=\"/modules/bew/uek/?feedback=bag&bog=1&bgid=".$fb_data["bogen_id"]."&\"\" onclick=\"\"><img src=\"" . $sys["icon_path"] . "bew_schule_tabelle_note_edit.gif\" alt=\"&Uuml;K-Feedback\" border=\"0\" /></a></td>\n" );
 			}else{
 				echo ( "<td></td>\n" );
 			}
@@ -436,11 +439,13 @@ ORDER BY bufb.bogen_time DESC" );
 			echo('<button value="./feedback/export.php?jahr=" onclick="fctExportFeedback(document.getElementById(\'jg_uek_periode\').value)">exportieren</button>');
 
 			echo('<script type="text/javascript">
-			function fctOpenLink(href,jahr){
+function fctOpenLink(href,jahr){
 				window.location.href = href + jahr+"&amp";
 			}function fctExportFeedback(p_intJahr){
 				document.location.href = "./feedback/export.php?jahr=" + p_intJahr + "&";
 			}
+			
+			
 			</script>');
 		}
 		echo ( "</p>\n" );

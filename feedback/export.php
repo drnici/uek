@@ -22,9 +22,8 @@ if ( !empty ( $uek_data["uek_id"] ) )
 
     //Alle User des ÜKs
     $user_result = $db->fctSendQuery("SELECT cp.person_vorname, cp.person_name, cp.person_id
-                                        FROM  `core_person` AS cp
-                                        INNER JOIN  `bew_uek_fb_bogen` AS bufb ON md5(cp.person_id) = bufb.person_fk_id OR cp.person_id = bufb.person_fk_id
-                                        WHERE bufb.uek_fk_id =".$uek_id);
+                                            FROM  `core_person` AS cp
+                                            INNER JOIN  `bew_uek_fb_bogen` AS bufb ON (md5(cp.person_id) = bufb.person_fk_id OR cp.person_id = bufb.person_fk_id) AND bufb.uek_fk_id =".$uek_data["uek_id"]." WHERE cp.person_id > 800");
 }else if(isset($_GET["jahr"])){
     $uek_data_a = $db->fctSendQuery("SELECT * FROM `bew_uek` WHERE `uek_jg` = ".$_GET["jahr"]);
 
@@ -128,8 +127,8 @@ if(isset($_GET["jahr"])){
         //Alle User des ÜKs
         $user_result = $db->fctSendQuery("SELECT cp.person_vorname, cp.person_name, cp.person_id
                                             FROM  `core_person` AS cp
-                                            INNER JOIN  `bew_uek_fb_bogen` AS bufb ON md5(cp.person_id) = bufb.person_fk_id OR cp.person_id = bufb.person_fk_id
-                                            WHERE bufb.uek_fk_id =".$uek_result["uek_id"]);
+                                            INNER JOIN  `bew_uek_fb_bogen` AS bufb ON (md5(cp.person_id) = bufb.person_fk_id OR cp.person_id = bufb.person_fk_id) AND bufb.uek_fk_id =".$uek_result["uek_id"]." WHERE cp.person_id > 800");
+
         while ($user_data = mysql_fetch_array($user_result)) {
 
             //Fixe linie mit Namen, Kursleiter, Kursanbieter, Modul
@@ -139,12 +138,13 @@ if(isset($_GET["jahr"])){
             $count_fragen = 0;
 
             //Alle Feedbackresultate pro user auslesen
-            $fb_result = $db->fctSendQuery("SELECT buf . * , bufb.person_fk_id, buff.anzahl_fragen, buff.art, buff.frage_id, bufa.antwortname
+            $fb_result = '';
+            $fb_result = $db->fctSendQuery("SELECT buf . * , buff.anzahl_fragen, buff.art, buff.frage_id, bufa.antwortname
                                             FROM  `bew_uek_fb` AS buf
                                             INNER JOIN  `bew_uek_fb_frage` AS buff ON buf.frage_fk_id = buff.frage_id
-                                            INNER JOIN  `bew_uek_fb_bogen` AS bufb ON buf.bogen_fk_id = bufb.bogen_id
+                                            INNER JOIN  `bew_uek_fb_bogen` AS bufb ON buf.bogen_fk_id = bufb.bogen_id AND bufb.uek_fk_id = " . $uek_result["uek_id"] . "
                                             LEFT JOIN `bew_uek_fb_antwort` As bufa ON buf.antwort_fk_id = bufa.antwort_id
-                                            WHERE bufb.uek_fk_id = " . $uek_result["uek_id"] . " AND bufb.person_fk_id = " . $user_data["person_id"] . " OR bufb.person_fk_id = md5(" . $user_data["person_id"] . ") ORDER BY buf.feedback_id");
+                                            WHERE bufb.person_fk_id = " . $user_data["person_id"] . " OR bufb.person_fk_id = md5(" . $user_data["person_id"] . ") ORDER BY buf.feedback_id");
 
             while ($fb_data = mysql_fetch_array($fb_result)) {
 
@@ -220,7 +220,7 @@ if(isset($_GET["jahr"])){
     while ($user_data = mysql_fetch_array($user_result)) {
 
         //Fixe linie mit Namen, Kursleiter, Kursanbieter, Modul
-        $output .= "<table border='1'><tr><td>" . $user_data["person_vorname"] . "</td><td>" . $user_data["person_name"] . "</td><td>" . $ort_data["ort_firma"] . " AG</td><td>" . $modul_data["modul_kurz"] . "-" . $modul_data["modul_bezeichnung"] . "</td>";
+        $output .= "<table border='1'><tr><td>" . $user_data["person_vorname"] . "</td><td>" . $user_data["person_name"] . "</td><td>".$person_data["person_vorname"] . " " . $person_data["person_name"]."</td><td>" . $ort_data["ort_firma"] . " AG</td><td>" . $modul_data["modul_kurz"] . "-" . $modul_data["modul_bezeichnung"] . "</td>";
 
         //Anzahl Antworten pro Frage errechnen
         $count_fragen = 0;
